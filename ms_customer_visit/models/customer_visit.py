@@ -12,6 +12,10 @@ from openerp.osv.expression import get_unaccent_wrapper
 from openerp.tools.translate import _
 import requests
 
+import logging
+
+_logger = logging.getLogger(__name__)
+
 baseUrlPrefix = "https://firebasestorage.googleapis.com/v0/b/odoo-8d694.appspot.com/o/subd_customer_visit%2F"
 baseUrlPostFix = ".png?alt=media"
 
@@ -55,6 +59,7 @@ class customer_visit(osv.osv):
         'image3_reference': fields.char('Image3 Reference'),
         'image4_reference': fields.char('Image4 Reference'),
         'image5_reference': fields.char('Image5 Reference'),
+        'visit_image_ids': fields.many2many('customer.visit.images', 'customer_visit_images_rel', 'customer_visit_id','visit_image_id', string="Customer Images Many2Many"),
         'is_image1': fields.boolean('Is Image1', default=False),
         'is_image2': fields.boolean('Is Image2', default=False),
         'is_image3': fields.boolean('Is Image3', default=False),
@@ -374,7 +379,7 @@ class customer_visit(osv.osv):
 
         return tools.image_resize_image_big(image.encode('base64'))
 
-    def generate_image(self, cr, uid, ids, context=None):
+    def generate_image_old(self, cr, uid, ids, context=None):
         # if ids:
         #     visit_data = self.browse(cr, uid, ids[0], context=context)
         #     import base64
@@ -424,7 +429,22 @@ class customer_visit(osv.osv):
                           {'image': image1, 'image1': image2, 'image2': image3, 'image3': image4, 'image4': image5,
                            'image5': image6})
 
-
+    def generate_image(self, cr, uid, ids, context=None):
+        customer_image = False
+        if ids:
+            visit_data = self.browse(cr, uid, ids[0], context=context)
+            import base64
+            if visit_data.visit_image_ids:
+                for image_id in visit_data.visit_image_ids:
+                    if image_id.name:
+                        url = baseUrlPrefix + image_id.name + baseUrlPostFix
+                        response= requests.get(url).content
+                        image = base64.b64encode(response)
+                        image_id.write({'image':image})
+                        _logger.info('-----------image has been retrieved----------')
+            if visit_data.customer_id.image:
+                customer_image = (visit_data.customer_id.image)
+        return self.write(cr, uid, ids, {'image5':customer_image})
 
     def is_approve(self, cr, uid, ids, context=None):
 
