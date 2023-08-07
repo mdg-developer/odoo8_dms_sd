@@ -472,7 +472,7 @@ class customer_visit(osv.osv):
                 for image_id in visit_data.visit_image_ids:
                     if image_id.name:
                         url = baseUrlPrefix + image_id.name + baseUrlPostFix
-                        response= requests.get(url).content
+                        response= requests.get(url,verify=False).content
                         image = base64.b64encode(response)
                         image_id.write({'image':image})
                         _logger.info('-----------image has been retrieved----------')
