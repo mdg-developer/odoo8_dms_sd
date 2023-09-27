@@ -473,7 +473,7 @@ class customer_visit(osv.osv):
                     if image_id.name:
                         url = baseUrlPrefix + image_id.name + baseUrlPostFix
                         response= requests.get(url,verify=False).content
-                        status_code = requests.get(url).status_code
+                        status_code = requests.get(url,verify=False).status_code
                         if status_code == 404:
                             raise osv.except_osv(_('Warning'),_('Photos from Firebase not exist!'))
                         image = base64.b64encode(response)
